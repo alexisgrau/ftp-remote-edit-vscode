@@ -32,7 +32,7 @@ This extension contributes the following commands to the Command palette :
 - onCommand:ftpExplorer.newFile
 - onCommand:ftpExplorer.refresh
 
-## Contributing
+## Local development
 
 ### Getting started
 
@@ -48,10 +48,22 @@ Now you can edit the code and create new features
 
 From VS Code you can run the extension under the debugger by pressing F5. This opens a new VS Code window with your extension loaded. Output from your extension shows up in the Debug Console. You can set break points, step through your code, and inspect variables either in the Debug view or the Debug Console.
 
-### Build extension
+### Build your extension
 
 Open a Terminal in the extension folder then type :
 
 ```sh
 npm run bundle
 ```
+
+## Contributing
+
+To contribute to the project :
+- make a fork of my repository
+- follow the flow as described in local development above, just skip getting started
+- Create a new banch as "issue-(issue id)" [link to issues](https://github.com/alexisgrau/ftp-remote-edit-vscode/issues)
+- write your code to fulfill the issue
+- follow the code style of the project, including indentation, and documentation
+- pay attention to write good descriptive commits
+- when issue is complete send your pull request
+
