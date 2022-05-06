@@ -55,3 +55,5 @@ Open a Terminal in the extension folder then type :
 ```sh
 npm run bundle
 ```
+
+Test
