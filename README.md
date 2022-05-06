@@ -2,9 +2,8 @@
 
 * [About](#about)
 * [Features](#features)
-* [Getting Started](#getting-started)
-* [Demo](#demo)
-* [Troubleshooting](#troubleshooting)
+* [Install Extension](#install-extension)
+* [Extension commands](#extension-commands)
 * [Contributing](#contributing)
 
 ## About
@@ -24,6 +23,8 @@ Download the [latest version](https://github.com/alexisgrau/ftp-remote-edit-vsco
 Open VS Code, press F1, copy paste "workbench.extensions.action.installVSIX" or type "install vsix" in the field, windows explorer opens select the extracted VSIX file.
 
 ## Extension commands
+
+This extension contributes the following commands to the Command palette :
 
 - onCommand:ftpExplorer.addServer
 - onCommand:ftpExplorer.openFtpResource
@@ -47,7 +48,7 @@ Now you can edit the code and create new features
 
 From VS Code you can run the extension under the debugger by pressing F5. This opens a new VS Code window with your extension loaded. Output from your extension shows up in the Debug Console. You can set break points, step through your code, and inspect variables either in the Debug view or the Debug Console.
 
-## Build extension
+### Build extension
 
 Open a Terminal in the extension folder then type :
 
