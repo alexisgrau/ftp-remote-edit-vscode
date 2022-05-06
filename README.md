@@ -4,6 +4,7 @@
 * [Features](#features)
 * [Install Extension](#install-extension)
 * [Extension commands](#extension-commands)
+* [Local development](#local-development)
 * [Contributing](#contributing)
 
 ## About
