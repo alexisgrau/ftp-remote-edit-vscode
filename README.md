@@ -1,4 +1,4 @@
-# <img src="https://emojigraph.org/media/joypixels/rocket_1f680.png" alt="OpenTelemetry Icon" width="45" height=""> FTP-Remote-Edit for VS Code
+# <img src="media/git-icon.png" alt="OpenTelemetry Icon" width="45" height=""> FTP-Remote-Edit for VS Code
 
 * [About](#about)
 * [Features](#features)
