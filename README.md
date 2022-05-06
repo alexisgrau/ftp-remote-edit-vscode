@@ -2,6 +2,7 @@
 
 * [About](#about)
 * [Features](#features)
+* [Warning](#warning)
 * [Install Extension](#install-extension)
 * [Extension commands](#extension-commands)
 * [Local development](#local-development)
