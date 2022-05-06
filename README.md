@@ -56,4 +56,4 @@ Open a Terminal in the extension folder then type :
 npm run bundle
 ```
 
-Test
+Test - Issue 1
