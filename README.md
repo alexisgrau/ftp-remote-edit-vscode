@@ -18,6 +18,10 @@ Editing files directly on your SFTP server without creating a local workspace. N
 - [x] Edit your remote single files without donwloading them all
 - [x] Automatic upload when saving files
 
+## Warning
+
+Plugin under development. Please use with caution on non-production servers. I cannot be held responsible for any data loss on your SFTP servers.
+
 ## Install Extension
 
 Download the [latest version](https://github.com/alexisgrau/ftp-remote-edit-vscode/releases/latest/download/ftp-remote-edit-vscode.vsix).
