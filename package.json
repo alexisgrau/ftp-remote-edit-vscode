@@ -1,0 +1,110 @@
+{
+	"name": "ftp-remote-edit",
+	"displayName": "FTP Remote Edit",
+	"description": "Editing files on your server without the need for creating a local project. Simply connect and edit your remote files. The files will be automatically updated to the server on saving.",
+	"version": "0.0.2",
+	"publisher": "alexis-grau",
+	"author": {
+		"name": "GRAU Alexis"
+	},
+	"private": true,
+	"engines": {
+		"vscode": "^1.57.0"
+	},
+	"categories": [
+		"Other"
+	],
+	"activationEvents": [
+		"onView:ftpExplorer",
+		"onCommand:ftpExplorer.addServer",
+		"onCommand:ftpExplorer.openFtpResource",
+		"onCommand:ftpExplorer.deleteEntry",
+		"onCommand:ftpExplorer.newFile",
+		"onCommand:ftpExplorer.refresh"
+	],
+	"main": "./out/extension.js",
+	"contributes": {
+		"views": {
+			"explorer": [
+				{
+					"id": "ftpExplorer",
+					"name": "FTP Remote Edit",
+					"icon": "media/dep.svg"
+				}
+			]
+		},
+		"commands": [
+			{
+				"command": "ftpExplorer.refresh",
+				"title": "Refresh",
+				"icon": {
+					"light": "resources/light/refresh.svg",
+					"dark": "resources/dark/refresh.svg"
+				}
+			},
+			{
+				"command": "ftpExplorer.addServer",
+				"title": "Edit servers",
+				"icon": {
+					"light": "resources/light/plus.svg",
+					"dark": "resources/dark/plus.svg"
+				}
+			},
+			{
+				"command": "ftpExplorer.openFtpResource",
+				"title": "Open file"
+			},
+			{
+				"command": "ftpExplorer.deleteEntry",
+				"title": "Delete"
+			},
+			{
+				"command": "ftpExplorer.newFile",
+				"title": "New file"
+			}
+		],
+		"menus": {
+			"view/title": [
+				{
+					"command": "ftpExplorer.refresh",
+					"when": "view == ftpExplorer",
+					"group": "navigation"
+				},
+				{
+					"command": "ftpExplorer.addServer",
+					"when": "view == ftpExplorer",
+					"group": "navigation"
+				}
+			],
+			"view/item/context": [
+				{
+					"command": "ftpExplorer.deleteEntry",
+					"when": "view == ftpExplorer && viewItem == fileitem"
+				},
+				{
+					"command": "ftpExplorer.newFile",
+					"when": "view == ftpExplorer && viewItem == folderitem"
+				}
+			]
+		}
+	},
+	"scripts": {
+		"vscode:prepublish": "npm run compile",
+		"compile": "tsc -p ./",
+		"watch": "tsc -watch -p ./",
+		"lint": "eslint . --ext .ts,.tsx",
+		"bundle" : "vsce package"
+	},
+	"devDependencies": {
+		"@types/node": "^12.12.0",
+		"@types/vscode": "^1.52.0",
+		"@typescript-eslint/eslint-plugin": "^5.19.0",
+		"@typescript-eslint/parser": "^5.19.0",
+		"eslint": "^8.13.0",
+		"typescript": "^4.6.3"
+	},
+	"dependencies": {
+		"sanitize-filename": "^1.6.3",
+		"ssh2": "^1.9.0"
+	}
+}
