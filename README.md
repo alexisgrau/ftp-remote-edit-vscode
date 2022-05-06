@@ -20,8 +20,8 @@ Editing files directly on your SFTP server without creating a local workspace. N
 
 ## Install Extension
 
-Download the [latest version](https://github.com/alexisgrau/ftp-remote-edit-vscode/releases/latest/download/release.zip) and extract dowloaded file.
-Open VS Code, press F1, copy paste "workbench.extensions.action.installVSIX" or type "install vsix" in the field, windows explorer opens select the extracted VSIX file.
+Download the [latest version](https://github.com/alexisgrau/ftp-remote-edit-vscode/releases/latest/download/ftp-remote-edit-vscode.vsix).
+Open VS Code, press F1, copy paste "workbench.extensions.action.installVSIX" or type "install vsix" in the field, windows explorer opens select downloaded file.
 
 ## Extension commands
 
@@ -61,7 +61,7 @@ npm run bundle
 
 To contribute to the project :
 - make a fork of my repository
-- follow the flow as described in local development above, just skip getting started
+- follow the flow as described in local development above, just change repository url
 - Create a new banch as "issue-(issue id)" [link to issues](https://github.com/alexisgrau/ftp-remote-edit-vscode/issues)
 - write your code to fulfill the issue
 - follow the code style of the project, including indentation, and documentation
