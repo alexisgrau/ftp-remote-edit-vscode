@@ -1,10 +1,9 @@
 import * as vscode from 'vscode';
 import { basename, dirname, join } from 'path';
-import { Client } from 'ssh2';
 import * as os from 'os';
 import * as fs from'fs';
-import { setTimeout } from 'timers';
 import sanitize = require("sanitize-filename");
+import { FtpHelper } from './FtpHelper';
 
 export interface FtpNode {
 	resource: vscode.Uri;
@@ -17,44 +16,18 @@ export interface RemoteFile {
 	uri: vscode.Uri;
 	remotePath: string;
 	ftpnode: FtpNode;
+	downloadTime: number;
 }
 
-export class FtpModel {
+export class FtpModel extends FtpHelper {
 
 	private _extensionContext: vscode.ExtensionContext;
 	private _hosts: object;
 
 	constructor(extensionContext: vscode.ExtensionContext){
+		super();
 		this._extensionContext = extensionContext;
 		return;
-	}
-
-	/**
-	 * Called to establish a connection to the SFTP server
-	 *
-	 * @param credentials The object that contain SFTP connection informations
-	 * @return A thenable that resolves whith connect when connection is established
-	 */
-
-	public connect(credentials): Thenable<any> {
-		return new Promise((c, e) => {
-			const client = new Client();
-			client.on('ready', () => {
-				c(client);
-			});
-
-			client.on('error', error => {
-				e('Error while connecting: ' + error.message);
-				return;
-			});
-
-			client.connect({
-				host: credentials.host,
-				port: credentials.port,
-				username: credentials.user,
-				password: credentials.password
-			});
-		});
 	}
 
 	/**
@@ -71,7 +44,7 @@ export class FtpModel {
 	 * @return A FtpNode array that contains information for generate node in treeview
 	 */
 
-	public returnRootsNodes(){
+	public returnRootsNodes():FtpNode[]{
 		const ftpNodes = [];
 		for (const serverName in this._hosts) {
 			ftpNodes.push({
@@ -115,28 +88,25 @@ export class FtpModel {
 	 * @return A thenable that resolves whith ftpNode child array
 	 */
 
-	public getChildren(node: FtpNode): Thenable<FtpNode[]> {
-		return this.connect(node.credentials).then(client => {
-			return new Promise((c, e) => {
-				client.sftp((err, sftp) => {
-					if(err){
-						return e(err);
-					}
-					sftp.readdir(node.resource.path, (err, list) => {
-						if (err) {
-							return e(err);
-						}
-						client.end();
-						return c(this.sort(list.map(entry => ({ 
-							resource: vscode.Uri.file((node.resource.path == '/' ? '' : node.resource.path) +'/'+entry.filename),
-							isDirectory: entry.longname.slice(0, 1) === 'd',
-							label: false,
-							credentials: node.credentials
-						}))));
-					});
-				});
-			});
+	public async getChildren(node: FtpNode): Promise<FtpNode[]> {
+
+		const client = await this.connect(node.credentials);
+		const sftp = await this.getSftp(client);
+		const list = await this.readdir(sftp, node.resource.path);
+
+		const ftpNodes = list.map(entry => {
+			const rootPath = node.resource.path.slice(-1) == '/' ? node.resource.path.slice(0, -1) : node.resource.path;
+			return {
+				resource: vscode.Uri.file(rootPath +'/'+entry.filename),
+				isDirectory: entry.longname.slice(0, 1) === 'd',
+				label: false,
+				credentials: node.credentials
+			};
 		});
+
+		client.end();
+
+		return this.sort(ftpNodes);
 	}
 
 	/**
@@ -167,45 +137,32 @@ export class FtpModel {
 	 * @return A thenable that resolves whith RemoteFile an object that contains information about downloaded file and remote file
 	 */
 
-	public openFile(node: FtpNode): Thenable<RemoteFile> {
-		return this.connect(node.credentials).then(client => {
-			return new Promise((c, e) => {
-				client.sftp((err, sftp) => {
-					if(err){ e(err); return; }
-					const filename = basename(node.resource.path);
-					const remoteFile = node.resource.path;
+	public async openFile(node: FtpNode): Promise<RemoteFile> {
 
-					const re = new RegExp('/', 'g');
-					const localFolder = os.tmpdir() + "\\" + sanitize(node.credentials.host) + dirname(node.resource.path).replace(re, '\\');
-					const localFile = localFolder + '\\' + filename;
+		const client = await this.connect(node.credentials);
+		const sftp = await this.getSftp(client);
 
-					if (!fs.existsSync(localFolder)){
-						fs.mkdirSync(localFolder, { recursive: true });
-					}
+		const filename = basename(node.resource.path);
+		const remoteFile = node.resource.path;
 
-					sftp.fastGet(remoteFile, localFile, {}, err => {
-						if(err){ e(err); return; }
-						setTimeout(() => {
-							c({uri: vscode.Uri.file(localFile), remotePath: remoteFile, ftpnode: node});
-						}, 100);
-					});
-				});
-			});
-		}); 
-	}
+		const re = new RegExp('/', 'g');
+		const localFolder = os.tmpdir() + "\\" + sanitize(node.credentials.host) + dirname(node.resource.path).replace(re, '\\');
+		const localFile = localFolder + '\\' + filename;
 
-	public uploadFile(remoteFile: RemoteFile): Thenable<string> {
-		return this.connect(remoteFile.ftpnode.credentials).then(client => {
-			return new Promise((c, e) => {
-				client.sftp((err, sftp) => {
-					if(err){ e(err); return; }
-					sftp.fastPut(remoteFile.uri.fsPath, remoteFile.remotePath, {}, err => {
-						if(err){ e(err); return; }
-						setTimeout(() => { c('File uploaded'); }, 100);
-					});
-				});
-			});
-		}); 
+		if (!fs.existsSync(localFolder)){
+			fs.mkdirSync(localFolder, { recursive: true });
+		}
+
+		await this.fastGet(sftp, remoteFile, localFile);
+
+		client.end();
+
+		return({
+			uri: vscode.Uri.file(localFile), 
+			remotePath: remoteFile, 
+			ftpnode: node, 
+			downloadTime: Math.floor(Date.now()/1000)
+		});
 	}
 
 	/**
@@ -216,18 +173,18 @@ export class FtpModel {
 	 * @return A thenable that resolves when remote file is created or edited
 	 */
 
-	public uploadFile2(remoteFile: RemoteFile, fileContent: string): Thenable<string> {
-		return this.connect(remoteFile.ftpnode.credentials).then(client => {
-			return new Promise((c, e) => {
-				client.sftp((err, sftp) => {
-					if(err){ e(err); return; }
-					sftp.writeFile(remoteFile.remotePath, fileContent, {}, err => {
-						if(err){ e(err); return; }
-						setTimeout(() => { c('File uploaded'); }, 100);
-					});
-				});
-			});
-		}); 
+	public async uploadFile(remoteFile: RemoteFile, fileContent: string, force: any=false): Promise<void> {
+		const client = await this.connect(remoteFile.ftpnode.credentials);
+		const sftp = await this.getSftp(client);
+		if (remoteFile.downloadTime != null && !force) {
+			const stats = await this.getRemoteFileStat(sftp, remoteFile.remotePath).catch(e => {});
+			if(stats['mtime'] > remoteFile.downloadTime){ throw new Error('error-file-changed'); }
+		}
+		await this.writeFile(sftp, remoteFile.remotePath, fileContent);
+		remoteFile.downloadTime = Math.floor(Date.now()/1000) + 30;
+
+		client.end();
+		return;
 	}
 
 	/**
@@ -237,18 +194,12 @@ export class FtpModel {
 	 * @return A thenable that resolves when remote file is deleted
 	 */
 
-	public deleteFile(node: FtpNode): Thenable<string> {
-		return this.connect(node.credentials).then(client => {
-			return new Promise((c, e) => {
-				client.sftp((err, sftp) => {
-					if(err){ e(err); return; }
-					sftp.unlink(node.resource.path, err => {
-						if(err){ console.log(err); e(err); return; }
-						setTimeout(() => { c('File deleted'); }, 100);
-					});
-				});
-			});
-		}); 
+	public async deleteFile(node: FtpNode): Promise<void> {
+		const client = await this.connect(node.credentials);
+		const sftp = await this.getSftp(client);
+		await this.unlink(sftp, node.resource.path);
+		client.end();
+		return;
 	}
 }
 
@@ -307,9 +258,10 @@ export class FtpTreeDataProvider implements vscode.TreeDataProvider<FtpNode>{
 					const remotefile:RemoteFile = {
 						uri: vscode.Uri.file(localFile),
 						remotePath: element.resource.path+'/'+value,
-						ftpnode: element
+						ftpnode: element,
+						downloadTime: null
 					};
-					this.model.uploadFile2(remotefile, '').then(msg => {
+					this.model.uploadFile(remotefile, '').then(msg => {
 						this.refresh();
 					});
 				}
@@ -337,7 +289,17 @@ export class FtpExplorer {
 
 		vscode.workspace.onWillSaveTextDocument(event => {
 			const remoteFile = this.isRemoteFile(event.document.uri);
-			if(remoteFile != null){ event.waitUntil(ftpModel.uploadFile2(remoteFile, event.document.getText())); }
+			if(remoteFile != null){ 
+				event.waitUntil(ftpModel.uploadFile(remoteFile, event.document.getText()).catch(e => {
+					if(e.message == 'error-file-changed'){
+						vscode.window
+						.showInformationMessage("The file has been modified since the last download do you want to overwrite these modifications", "Yes", "No")
+						.then(answer => {
+							if (answer === "Yes") { ftpModel.uploadFile(remoteFile, event.document.getText(), true); }
+						});
+					}
+				}));
+			}
 		});
 	}
 
