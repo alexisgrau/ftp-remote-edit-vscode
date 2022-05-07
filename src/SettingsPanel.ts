@@ -1,98 +1,99 @@
 import * as vscode from "vscode";
 
 export class SettingsPanel {
-  public static currentPanel: SettingsPanel | undefined;
+	public static currentPanel: SettingsPanel | undefined;
 
-  public static readonly viewType = "settings";
+	public static readonly viewType = "settings";
 
-  private readonly _panel: vscode.WebviewPanel;
-  private readonly _extensionUri: vscode.Uri;
-  private readonly _extensionContext: vscode.ExtensionContext;
-  private _disposables: vscode.Disposable[] = [];
+	private readonly _panel: vscode.WebviewPanel;
+	private readonly _extensionUri: vscode.Uri;
+	private readonly _extensionContext: vscode.ExtensionContext;
+	private _disposables: vscode.Disposable[] = [];
 
-  public static createOrShow(extensionContext: vscode.ExtensionContext) {
-    const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
+	public static createOrShow(extensionContext: vscode.ExtensionContext) {
+		const column = vscode.window.activeTextEditor ? vscode.window.activeTextEditor.viewColumn : undefined;
 
-    if (SettingsPanel.currentPanel) {
-		SettingsPanel.currentPanel._panel.reveal(column);
-		SettingsPanel.currentPanel._update();
-		return;
-    }
-    const panel = vscode.window.createWebviewPanel(
-		SettingsPanel.viewType,
-		"FTP Remote explorer settings",
-		column || vscode.ViewColumn.One,
-		{
-			enableScripts: true,
-			localResourceRoots: [extensionContext.extensionUri],
+		if (SettingsPanel.currentPanel) {
+			SettingsPanel.currentPanel._panel.reveal(column);
+			SettingsPanel.currentPanel._update();
+			return;
 		}
-    );
+		const panel = vscode.window.createWebviewPanel(
+			SettingsPanel.viewType,
+			"FTP Remote explorer settings",
+			column || vscode.ViewColumn.One,
+			{
+				enableScripts: true,
+				localResourceRoots: [extensionContext.extensionUri],
+			}
+		);
 
-    SettingsPanel.currentPanel = new SettingsPanel(panel, extensionContext);
-  }
+		SettingsPanel.currentPanel = new SettingsPanel(panel, extensionContext);
+	}
 
-  public static kill() {
-    SettingsPanel.currentPanel?.dispose();
-    SettingsPanel.currentPanel = undefined;
-  }
+	public static kill() {
+		SettingsPanel.currentPanel?.dispose();
+		SettingsPanel.currentPanel = undefined;
+	}
 
-  public static revive(panel: vscode.WebviewPanel, extensionContext: vscode.ExtensionContext) {
-    SettingsPanel.currentPanel = new SettingsPanel(panel, extensionContext);
-  }
+	public static revive(panel: vscode.WebviewPanel, extensionContext: vscode.ExtensionContext) {
+		SettingsPanel.currentPanel = new SettingsPanel(panel, extensionContext);
+	}
 
-  private constructor(panel: vscode.WebviewPanel, extensionContext: vscode.ExtensionContext) {
-    this._panel = panel;
-    this._extensionUri = extensionContext.extensionUri;
-	this._extensionContext = extensionContext;
-    this._update();
-    this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
-  }
+	private constructor(panel: vscode.WebviewPanel, extensionContext: vscode.ExtensionContext) {
+		this._panel = panel;
+		this._extensionUri = extensionContext.extensionUri;
+		this._extensionContext = extensionContext;
+		this._update();
+		this._panel.onDidDispose(() => this.dispose(), null, this._disposables);
+	}
 
-  public dispose() {
-    SettingsPanel.currentPanel = undefined;
-    this._panel.dispose();
+	public dispose() {
+		console.log('dispose');
+		SettingsPanel.currentPanel = undefined;
+		this._panel.dispose();
 
-    while (this._disposables.length) {
-      const x = this._disposables.pop();
-      if(x){ x.dispose(); }
-    }
-  }
-
-  public getNonce() {
-	let text = "";
-	const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-	for (let i = 0; i < 32; i++) { text += possible.charAt(Math.floor(Math.random() * possible.length)); }
-	return text;
-  }
-
-  private async _update() {
-    const webview = this._panel.webview;
-
-    this._panel.webview.html = this._getHtmlForWebview(webview);
-    webview.onDidReceiveMessage(async (data) => {
-		if(data.command == 'get_server_list'){
-			this._extensionContext.secrets.get(`ftpRemoteEdit.servers`).then(servers => {
-				if(servers == undefined){ servers = '{}'; }
-				webview.postMessage({ command: 'server_list', value: JSON.parse(servers)});
-			});
+		while (this._disposables.length) {
+			const x = this._disposables.pop();
+			if (x) { x.dispose(); }
 		}
-		if(data.command == 'update_server_list'){
-			this._extensionContext.secrets.store("ftpRemoteEdit.servers", JSON.stringify(data.value));
-			vscode.commands.executeCommand('ftpExplorer.refresh');
-		}
-		if(data.command == 'close_panel'){
-			this.dispose();
-		}
-    });
-  }
+	}
 
-  private _getHtmlForWebview(webview: vscode.Webview) {
+	public getNonce() {
+		let text = "";
+		const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+		for (let i = 0; i < 32; i++) { text += possible.charAt(Math.floor(Math.random() * possible.length)); }
+		return text;
+	}
 
-    const stylePath = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "settings-panel.css"));
-	const scriptPath = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "settings-panel.js"));
-    const nonce = this.getNonce();
+	private async _update() {
+		const webview = this._panel.webview;
 
-    return `
+		this._panel.webview.html = this._getHtmlForWebview(webview);
+		webview.onDidReceiveMessage(async (data) => {
+			if (data.command == 'get_server_list') {
+				this._extensionContext.secrets.get(`ftpRemoteEdit.servers`).then(servers => {
+					if (servers == undefined) { servers = '{}'; }
+					webview.postMessage({ command: 'server_list', value: JSON.parse(servers) });
+				});
+			}
+			if (data.command == 'update_server_list') {
+				this._extensionContext.secrets.store("ftpRemoteEdit.servers", JSON.stringify(data.value));
+				vscode.commands.executeCommand('ftpExplorer.refresh');
+			}
+			if (data.command == 'close_panel') {
+				this.dispose();
+			}
+		});
+	}
+
+	private _getHtmlForWebview(webview: vscode.Webview) {
+
+		const stylePath = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "settings-panel.css"));
+		const scriptPath = webview.asWebviewUri(vscode.Uri.joinPath(this._extensionUri, "media", "settings-panel.js"));
+		const nonce = this.getNonce();
+
+		return `
 	<!DOCTYPE html>
 	<html lang="fr">
 		<head>
@@ -156,5 +157,5 @@ export class SettingsPanel {
 		</body>
 	</html>
 	`;
-  }
+	}
 }
