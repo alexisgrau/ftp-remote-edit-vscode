@@ -178,7 +178,7 @@ export class FtpModel extends FtpHelper {
 		const sftp = await this.getSftp(client);
 		if (remoteFile.downloadTime != null && !force) {
 			const stats = await this.getRemoteFileStat(sftp, remoteFile.remotePath).catch(e => {});
-			if(stats['mtime'] > remoteFile.downloadTime){ throw new Error('error-file-changed'); }
+			if(stats['mtime'] > remoteFile.downloadTime){ client.end(); throw new Error('error-file-changed'); }
 		}
 		await this.writeFile(sftp, remoteFile.remotePath, fileContent);
 		remoteFile.downloadTime = Math.floor(Date.now()/1000) + 30;

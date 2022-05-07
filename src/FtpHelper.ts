@@ -9,8 +9,8 @@ export class FtpHelper{
 				c(client);
 			});
 
-			client.on('error', error => {
-				e('Error while connecting: ' + error.message);
+			client.on('error', err => {
+				e('Error while connecting check your credentials');
 				return;
 			});
 
@@ -26,7 +26,11 @@ export class FtpHelper{
 	public getSftp(client): Promise<any>{
 		return new Promise((c, e) => {
 			client.sftp((err, sftp) => {
-				if(err){ e(); return; }
+				if(err){
+					client.end();
+					e('Error while getting sftp object');
+					return;
+				}
 				c(sftp);
 			});
 		});
@@ -36,9 +40,10 @@ export class FtpHelper{
 		return new Promise((c, e) => {
 			sftp.stat(remotePath, (err, file) => {
 				if(!err && file && file.mtime){
-					c(file); return;
+					c(file); 
+					return;
 				}
-				e(); 
+				e('Error while getting remote file informations');
 			});
 		});	
 	}
@@ -46,7 +51,10 @@ export class FtpHelper{
 	public writeFile(sftp, remotePath, fileContent): Promise<void>{
 		return new Promise((c, e) => {
 			sftp.writeFile(remotePath, fileContent, {}, err => {
-				if(err){ e(err); return; }
+				if(err){ 
+					e('Error while writing file on server');
+					return;
+				}
 				setTimeout(() => { c(); }, 100);
 			});
 		});
@@ -55,7 +63,10 @@ export class FtpHelper{
 	public unlink(sftp, remotePath): Promise<void> {
 		return new Promise((c, e) => {
 			sftp.unlink(remotePath, err => {
-				if(err){ e(); return; }
+				if(err){ 
+					e('Error while deleting file on server');
+					return;
+				}
 				setTimeout(() => { c(); }, 100);
 			});
 		});
@@ -64,7 +75,10 @@ export class FtpHelper{
 	public fastGet(sftp, remoteFile, localFile): Promise<void> {
 		return new Promise((c, e) => {
 			sftp.fastGet(remoteFile, localFile, {}, err => {
-				if(err){ e(); return; }
+				if(err){ 
+					e('Error while downloading');
+					return;
+				}
 				setTimeout(() => { c(); }, 100);
 			});
 		});
@@ -73,7 +87,10 @@ export class FtpHelper{
 	public readdir(sftp, remotePath): Promise<Array<any>> {
 		return new Promise((c, e) => {
 			sftp.readdir(remotePath, (err: string, list) => {
-				if (err) { return e(err); }
+				if (err) { 
+					e('Error while reading remote folder content');
+					return;
+				}
 				c(list);
 			});
 		});
