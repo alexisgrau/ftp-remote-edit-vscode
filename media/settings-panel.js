@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function(){
 	let deletehost = document.querySelector('button[name="delete_host"]');
 	let closepanel = document.querySelector('button[name="close_panel"]');
 	let servername = document.querySelector('input[name="server_name"]');
+	let protocol = document.querySelector('select[name="protocol"]');
 	let host = document.querySelector('input[name="host"]');
 	let port = document.querySelector('input[name="port"]');
 	let user = document.querySelector('input[name="user"]');
@@ -23,7 +24,8 @@ document.addEventListener('DOMContentLoaded', function(){
 			password: null,
 			port: null,
 			root: null,
-			servername: null
+			servername: null,
+			protocol: null
 		}
 	};
 
@@ -33,6 +35,7 @@ document.addEventListener('DOMContentLoaded', function(){
 		state.values.password = password.value;
 		state.values.port = port.value;
 		state.values.root = root.value;
+		state.values.protocol = protocol.value;
 		state.values.servername = servername.value;
 		vscode.setState(state);
 	});
@@ -53,6 +56,7 @@ document.addEventListener('DOMContentLoaded', function(){
 				user.value = state.values.user;
 				password.value = state.values.password;
 				port.value = state.values.port;
+				protocol.value = state.values.protocol;
 				root.value = state.values.root;
 				servername.value = state.values.servername;
 		
@@ -106,11 +110,13 @@ document.addEventListener('DOMContentLoaded', function(){
 		if(!user.value){ return; }
 		if(!port.value){ return; }
 		if(!root.value){ return; }
+		if(!protocol.value){ return; }
 
 		hosts[servername.value] = {
 			"host" : host.value, 
 			"user" : user.value,
 			"password": password.value,
+			"protocol": protocol.value,
 			"port": port.value,
 			"root": root.value
 		};
@@ -128,6 +134,7 @@ document.addEventListener('DOMContentLoaded', function(){
 		host.value = state.values.host = '';
 		port.value = state.values.port = '';
 		user.value = state.values.user = '';
+		protocol.value = state.values.protocol = '';
 		password.value = state.values.password = '';
 		root.value = state.values.root = '';
 		state.action = 'new';
@@ -142,6 +149,7 @@ document.addEventListener('DOMContentLoaded', function(){
 			state.currentHostId = hostName;
 			servername.value = hostName;
 			servername.oldname = hostName;
+			protocol.value = hosts[hostName].protocol ? hosts[hostName].protocol : 'sftp';
 			host.value = hosts[hostName].host;
 			port.value = hosts[hostName].port;
 			user.value = hosts[hostName].user;

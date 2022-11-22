@@ -49,7 +49,6 @@ export class SettingsPanel {
 	}
 
 	public dispose() {
-		console.log('dispose');
 		SettingsPanel.currentPanel = undefined;
 		this._panel.dispose();
 
@@ -71,6 +70,7 @@ export class SettingsPanel {
 
 		this._panel.webview.html = this._getHtmlForWebview(webview);
 		webview.onDidReceiveMessage(async (data) => {
+
 			if (data.command == 'get_server_list') {
 				this._extensionContext.secrets.get(`ftpRemoteEdit.servers`).then(servers => {
 					if (servers == undefined) { servers = '{}'; }
@@ -130,6 +130,7 @@ export class SettingsPanel {
 					<label>Protocol</label>
 					<select name="protocol">
 						<option value="sftp">SSH - File transfer Protocol</option>
+						<option value="ftp">FTP - File transfer Protocol</option>
 					</select>
 				</div>
 			</div>
