@@ -1,9 +1,10 @@
 import * as vscode from 'vscode';
-import { basename, dirname, join } from 'path';
+import { basename, dirname, join, normalize } from 'path';
 import * as os from 'os';
 import * as fs from'fs';
 import sanitize = require("sanitize-filename");
 import { FtpHelper } from './FtpHelper';
+
 
 export interface FtpNode {
 	resource: vscode.Uri;
@@ -299,6 +300,32 @@ export class FtpTreeDataProvider implements vscode.TreeDataProvider<FtpNode>{
 			});
 		});
 	}
+
+	public uploadFile(element: FtpNode){
+
+		const options: vscode.OpenDialogOptions = {canSelectFiles: true, canSelectMany: false, canSelectFolders: false};
+		vscode.window.showOpenDialog(options).then(value => {
+			if(!value || value.length == 0){ return; }
+
+			const filePath = os.platform() == 'win32' ? value[0].path.slice(1) : value[0]+"";
+
+			const buffer = fs.readFileSync(filePath);
+			const fileContent = buffer.toString();
+
+			if(!fileContent){ return; }
+			
+			const remotefile:RemoteFile = {
+				uri: vscode.Uri.file(value[0].path),
+				remotePath: element.resource.path+'/'+basename(value[0].path),
+				ftpnode: element,
+				downloadTime: null
+			};
+			this.model.uploadFile(remotefile, fileContent, false).then(msg => {
+				this.refresh();
+			});
+
+		});
+	}
 }
 
 export class FtpExplorer {
@@ -316,6 +343,7 @@ export class FtpExplorer {
 		vscode.commands.registerCommand('ftpExplorer.refresh', () => treeDataProvider.refresh());
 		vscode.commands.registerCommand('ftpExplorer.deleteEntry', node => treeDataProvider.removeNode(node));
 		vscode.commands.registerCommand('ftpExplorer.newFile', node => treeDataProvider.addNode(node));
+		vscode.commands.registerCommand('ftpExplorer.uploadFile', node => treeDataProvider.uploadFile(node));
 		vscode.commands.registerCommand('ftpExplorer.openFtpResource', resource => ftpModel.openFile(resource).then(downloadedres => this.openResource(downloadedres)));
 
 		vscode.workspace.onWillSaveTextDocument(event => {
