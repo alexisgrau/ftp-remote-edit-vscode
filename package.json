@@ -2,7 +2,7 @@
 	"name": "ftp-remote-edit",
 	"displayName": "FTP Remote Edit",
 	"description": "Editing files on your server without the need for creating a local project. Simply connect and edit your remote files. The files will be automatically updated to the server on saving.",
-	"version": "0.0.5",
+	"version": "0.0.6",
 	"publisher": "alexis-grau",
 	"repository": "https://github.com/alexisgrau/ftp-remote-edit-vscode.git",
 	"author": {
@@ -66,6 +66,14 @@
 			{
 				"command": "ftpExplorer.uploadFile",
 				"title": "Upload file"
+			},
+			{
+				"command": "ftpExplorer.newFolder",
+				"title": "New folder"
+			},
+			{
+				"command": "ftpExplorer.deleteFolder",
+				"title": "Delete"
 			}
 		],
 		"menus": {
@@ -92,6 +100,14 @@
 				},
 				{
 					"command": "ftpExplorer.uploadFile",
+					"when": "view == ftpExplorer && viewItem == folderitem"
+				},
+				{
+					"command": "ftpExplorer.newFolder",
+					"when": "view == ftpExplorer && viewItem == folderitem"
+				},
+				{
+					"command": "ftpExplorer.deleteFolder",
 					"when": "view == ftpExplorer && viewItem == folderitem"
 				}
 			]

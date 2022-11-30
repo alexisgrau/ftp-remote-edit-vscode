@@ -233,6 +233,36 @@ export class FtpModel extends FtpHelper {
 		}
 		return;
 	}
+
+	public async newFolder(node: FtpNode, folderPath: string): Promise<void> {
+		if(node.credentials.protocol == 'ftp'){
+			const client = await this.connectFtp(node.credentials);
+			await this.mkDirFtp(client, folderPath);
+			client.end();
+		}
+		else{
+			const client = await this.connect(node.credentials);
+			const sftp = await this.getSftp(client);
+			await this.mkDir(sftp, folderPath);
+			client.end();
+		}
+		return;
+	}
+
+	public async deleteFolder(node: FtpNode, folderPath: string): Promise<void> {
+		if(node.credentials.protocol == 'ftp'){
+			const client = await this.connectFtp(node.credentials);
+			await this.rmDirFtp(client, folderPath);
+			client.end();
+		}
+		else{
+			const client = await this.connect(node.credentials);
+			const sftp = await this.getSftp(client);
+			await this.rmDir(sftp, folderPath);
+			client.end();
+		}
+		return;
+	}
 }
 
 export class FtpTreeDataProvider implements vscode.TreeDataProvider<FtpNode>{
@@ -301,6 +331,22 @@ export class FtpTreeDataProvider implements vscode.TreeDataProvider<FtpNode>{
 		});
 	}
 
+	public addFolder(element: FtpNode){
+		const options: vscode.InputBoxOptions = { prompt: "", placeHolder: "Name of the new folder" };
+		vscode.window.showInputBox(options).then(value => {
+			if (!value) return;
+			this.model.newFolder(element, element.resource.path+'/'+value).then(() => {
+				this.refresh();
+			});
+		});
+	}
+
+	public deleteFolder(element: FtpNode){
+		this.model.deleteFolder(element, element.resource.path).then(() => {
+			this.refresh();
+		});
+	}
+
 	public uploadFile(element: FtpNode){
 
 		const options: vscode.OpenDialogOptions = {canSelectFiles: true, canSelectMany: false, canSelectFolders: false};
@@ -344,6 +390,8 @@ export class FtpExplorer {
 		vscode.commands.registerCommand('ftpExplorer.deleteEntry', node => treeDataProvider.removeNode(node));
 		vscode.commands.registerCommand('ftpExplorer.newFile', node => treeDataProvider.addNode(node));
 		vscode.commands.registerCommand('ftpExplorer.uploadFile', node => treeDataProvider.uploadFile(node));
+		vscode.commands.registerCommand('ftpExplorer.newFolder', node => treeDataProvider.addFolder(node));
+		vscode.commands.registerCommand('ftpExplorer.deleteFolder', node => treeDataProvider.deleteFolder(node));
 		vscode.commands.registerCommand('ftpExplorer.openFtpResource', resource => ftpModel.openFile(resource).then(downloadedres => this.openResource(downloadedres)));
 
 		vscode.workspace.onWillSaveTextDocument(event => {

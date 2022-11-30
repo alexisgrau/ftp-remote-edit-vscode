@@ -50,6 +50,30 @@ export class FtpHelper{
 		});
 	}
 
+	public mkDirFtp(client, remoteDir): Promise<void> {
+		return new Promise((c, e) => {
+			client.mkdir(remoteDir, false, function(err) {
+				if(err){ 
+					e('Error while creating folder on server');
+					return;
+				}
+				c();
+			});
+		});
+	}
+
+	public rmDirFtp(client, remoteDir): Promise<void> {
+		return new Promise((c, e) => {
+			client.rmdir(remoteDir, true, function(err) {
+				if(err){ 
+					e('Error while removing folder on server');
+					return;
+				}
+				c();
+			});
+		});
+	}
+
 	public writeFileFtp(client, remoteFile, bufferContent): Promise<void>{
 		return new Promise((c, e) => {
 			client.put(bufferContent, remoteFile, err => {
@@ -165,6 +189,30 @@ export class FtpHelper{
 					return;
 				}
 				c(list);
+			});
+		});
+	}
+
+	public mkDir(sftp, remoteDir: string): Promise<void>{
+		return new Promise((c, e) => {
+			sftp.mkdir(remoteDir, (err: string) => {
+				if (err) { 
+					e('Error while creating folder on server');
+					return;
+				}
+				c();
+			});
+		});
+	}
+
+	public rmDir(sftp, remoteDir: string): Promise<void>{
+		return new Promise((c, e) => {
+			sftp.rmdir(remoteDir, (err: string) => {
+				if (err) {
+					e('Error while removing folder on server');
+					return;
+				}
+				c();
 			});
 		});
 	}
